@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parts</title>
+    <style>
+        .part-container {
+            display: inline-block;
+            margin: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .part-image {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .part-name {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Parts Catalog</h1>
+    <div>
+        {% for part in parts %}
+            <div class="part-container">
+                <img src="{{ part.ImageURL }}" 
+                     alt="{{ part.PartDescription }}" 
+                     class="part-image"
+                     onerror="this.src='/static/images/parts/default.jpg';">
+                <div class="part-name">{{ part.PartDescription }}</div>
+                <div>Part #: {{ part.PartNo }}</div>
+                <div>Category: {{ part.Category }}</div>
+                <a href="{{ url_for('view_part', part_no=part.PartNo) }}">View Details</a>
+            </div>
+        {% endfor %}
+    </div>
+    <br>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</body>
+</html>
