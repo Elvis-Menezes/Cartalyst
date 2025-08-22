@@ -6,7 +6,7 @@ Test script to demonstrate the part name cleaning and standardization functional
 from rag import PartsRAG
 
 def test_part_name_cleaning():
-    print("🧹 Testing Part Name Cleaning and Standardization")
+    print("Testing Part Name Cleaning and Standardization")
     print("=" * 60)
     
     # Test various messy part names
@@ -28,7 +28,7 @@ def test_part_name_cleaning():
         "wtr_pump_thermostat_kit"
     ]
     
-    print("🔧 Original vs Cleaned Part Names:")
+    print("Original vs Cleaned Part Names:")
     print("-" * 60)
     
     for i, original_name in enumerate(test_names, 1):
@@ -37,18 +37,18 @@ def test_part_name_cleaning():
         print(f"    Cleaned:  {cleaned_name}")
         print()
     
-    print("✨ Benefits of Part Name Cleaning:")
+    print("Benefits of Part Name Cleaning:")
     print("-" * 40)
-    print("• Removes underscores and excessive punctuation")
-    print("• Expands common abbreviations (BRK → Brake, ALT → Alternator)")
-    print("• Standardizes terminology (FLT → Filter, PMP → Pump)")
-    print("• Proper title case formatting")
-    print("• More attractive and professional appearance")
-    print("• Better readability for customers")
+    print("- Removes underscores and excessive punctuation")
+    print("- Expands common abbreviations (BRK -> Brake, ALT -> Alternator)")
+    print("- Standardizes terminology (FLT -> Filter, PMP -> Pump)")
+    print("- Proper title case formatting")
+    print("- More attractive and professional appearance")
+    print("- Better readability for customers")
 
 def test_with_real_database():
     print("\n" + "=" * 60)
-    print("📊 Testing with Real Database Parts:")
+    print("Testing with Real Database Parts:")
     print("-" * 40)
     
     # Initialize RAG system
@@ -56,14 +56,14 @@ def test_with_real_database():
     
     # Load data from database
     if not rag_system.load_data_from_db('parts.db'):
-        print("❌ Failed to load database")
+        print("ERROR: Failed to load database")
         return
     
     # Get a sample of parts from each category
     categorized_parts = rag_system.get_categorized_parts()
     
     for category, parts in list(categorized_parts.items())[:3]:  # Show first 3 categories
-        print(f"\n🏷️  {category} Category:")
+        print(f"\n{category} Category:")
         print("-" * 30)
         
         for i, part in enumerate(parts[:5], 1):  # Show first 5 parts

@@ -6,6 +6,7 @@
     <title>{{ part.PartDescription }} - Cartalyst</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
@@ -24,6 +25,18 @@
                     {% endif %}
                 </div>
                 <div class="flex items-center space-x-6">
+                    <!-- Search Bar -->
+                    {% if session.get('user_role') == 'customer' %}
+                    <form method="GET" action="{{ url_for('search') }}" class="hidden sm:flex">
+                        <input type="text" name="q" placeholder="Search parts..."
+                               class="px-3 py-1 text-sm border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 w-48">
+                        <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </button>
+                    </form>
+                    {% endif %}
                     <a href="{{ url_for('dashboard') }}" class="text-sm font-medium text-gray-600 hover:text-gray-900">Dashboard</a>
                     <a href="{{ url_for('cart') }}" class="text-sm font-medium text-gray-600 hover:text-gray-900">Cart</a>
                     <a href="{{ url_for('logout') }}" class="text-sm font-medium text-gray-600 hover:text-gray-900">Logout</a>
@@ -58,7 +71,7 @@
             <div class="aspect-w-1 aspect-h-1">
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-8">
                     {% if part.ImageURL %}
-                    <img src="{{ part.ImageURL }}" alt="{{ part.PartDescription }}" class="w-full h-96 object-cover rounded-lg">
+                    <img src="{{ part.ImageURL }}" alt="{{ part.PartDescription }}" class="w-full h-96 object-cover rounded-lg lazy-load" loading="lazy">
                     {% else %}
                     <div class="w-full h-96 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
                         <svg class="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,5 +240,6 @@
             }, 5000);
         }
     </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

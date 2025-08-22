@@ -1,1 +1,7 @@
-flask scikit-learn pandas groq python-dotenv 
+
+flask
+groq
+pandas
+openpyxl
+scikit-learn
+python-dotenv
