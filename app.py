@@ -38,13 +38,56 @@ DEFAULT_PART_IMAGES = {
     'default': 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop'
 }
 
-def get_part_image_url(part_category, part_no=None):
-    """Get image URL for a part, checking local files first."""
+def get_part_image_url(part_category, part_no=None, part_description=None):
+    """Get image URL for a part, checking local files first with improved matching."""
+    
+    # Define mapping between part descriptions and image files
+    PART_IMAGE_MAPPING = {
+        'air filter': 'air_filter.jpeg',
+        'air filtration': 'air_filter.jpeg',
+        'brake pad': 'brake_pad.jpg',
+        'brake': 'brake_pad.jpg',
+        'clutch disk': 'clutch_disk.jpeg',
+        'clutchdisk': 'clutch_disk.jpeg',
+        'clutch': 'clutch_disk.jpeg',
+        'engine insulation': 'engine_insulation.jpeg',
+        'engmate': 'engmate.jpeg',
+        'fuel filter': 'fuel_filter.jpeg',
+        'fuel pump': 'fuel_filter.jpeg',
+        'grommet': 'grommet.jpeg',
+        'lower arm bush': 'lower_arm_bush.jpeg',
+        'shock absorber': 'shock_absorber.jpeg',
+        'shock': 'shock_absorber.jpeg',
+        'thrust washer': 'thrust_washer.jpeg',
+        'thrust': 'thrust_washer.jpeg',
+        'main bearing': 'thrust_washer.jpeg',
+        'axle boot': 'lower_arm_bush.jpeg',
+        'petrolloggle': 'fuel_filter.jpeg'
+    }
+    
+    # Try to match based on part description first
+    if part_description:
+        description_lower = part_description.lower().strip()
+        
+        # Direct match
+        if description_lower in PART_IMAGE_MAPPING:
+            image_file = PART_IMAGE_MAPPING[description_lower]
+            full_path = os.path.join('static/images/parts', image_file)
+            if os.path.exists(full_path):
+                return f'/static/images/parts/{image_file}'
+        
+        # Partial match - check if any key is contained in the description
+        for key, image_file in PART_IMAGE_MAPPING.items():
+            if key in description_lower:
+                full_path = os.path.join('static/images/parts', image_file)
+                if os.path.exists(full_path):
+                    return f'/static/images/parts/{image_file}'
     
     # Try to find image based on part number
     if part_no:
         possible_names = [
             f"{part_no.lower()}.jpg",
+            f"{part_no.lower()}.jpeg",
             f"{part_no.lower()}.png"
         ]
         
@@ -53,11 +96,12 @@ def get_part_image_url(part_category, part_no=None):
             if os.path.exists(full_path):
                 return f'/static/images/parts/{name}'
     
-    # Try category-based image (like your brake_pad.jpg)
+    # Try category-based image
     if part_category:
         category_clean = part_category.lower().replace(' ', '_')
         possible_names = [
             f"{category_clean}.jpg",
+            f"{category_clean}.jpeg",
             f"{category_clean}.png"
         ]
         
@@ -67,11 +111,14 @@ def get_part_image_url(part_category, part_no=None):
                 return f'/static/images/parts/{name}'
     
     # Fallback to default
-    if os.path.exists('static/images/parts/default.jpg'):
-        return '/static/images/parts/default.jpg'
+    default_path = 'static/images/parts/default.jpeg'
+    if os.path.exists(default_path):
+        return '/static/images/parts/default.jpeg'
     
-    # Your original Unsplash fallback
-    category_key = next((key for key in DEFAULT_PART_IMAGES if key in part_category.lower()), 'default')
+    # Final fallback to Unsplash
+    category_key = 'default'
+    if part_category:
+        category_key = next((key for key in DEFAULT_PART_IMAGES if key in part_category.lower()), 'default')
     return DEFAULT_PART_IMAGES[category_key]
 
 # --- Database Helper Functions ---
@@ -318,7 +365,7 @@ def show_parts():
     parts_with_images = []
     for part in parts:
         part_dict = dict(part)
-        part_dict['ImageURL'] = get_part_image_url(part_dict['Category'], part_dict['PartNo'])
+        part_dict['ImageURL'] = get_part_image_url(part_dict['Category'], part_dict['PartNo'], part_dict['PartDescription'])
         parts_with_images.append(part_dict)
 
     return render_template("parts.html", parts=parts_with_images)
@@ -350,7 +397,7 @@ def view_parts_by_category(category_name):
         parts_with_images = []
         for part in parts_to_display:
             part_dict = part.to_dict()
-            part_dict['ImageURL'] = get_part_image_url(part.Category, part.PartNo)
+            part_dict['ImageURL'] = get_part_image_url(part.Category, part.PartNo, part.PartDescription)
             # Use cleaned description for better presentation
             part_dict['CleanedDescription'] = part.cleaned_description
             parts_with_images.append(part_dict)
@@ -359,6 +406,62 @@ def view_parts_by_category(category_name):
     except Exception as e:
         logging.error(f"Error loading category {category_name}: {e}")
         return redirect(url_for('dashboard'))
+
+# --- Search Route ---
+@app.route('/search')
+def search():
+    """Search for parts based on query."""
+    if 'user_role' not in session:
+        return redirect(url_for('login'))
+    
+    query = request.args.get('q', '').strip()
+    page = request.args.get('page', 1, type=int)
+    
+    if not query:
+        return render_template('search_results.html', parts=[], query='', page=1, total_pages=0)
+    
+    try:
+        # Search through parts data
+        matching_parts = []
+        seen_parts = set()
+        
+        for part in rag_system.parts_data:
+            if part.PartNo not in seen_parts:
+                # Search in part description, part number, and category
+                if (query.lower() in part.PartDescription.lower() or
+                    query.lower() in part.PartNo.lower() or
+                    query.lower() in part.Category.lower() or
+                    (hasattr(part, 'VehicleMake') and part.VehicleMake and query.lower() in part.VehicleMake.lower())):
+                    matching_parts.append(part)
+                    seen_parts.add(part.PartNo)
+        
+        # Pagination
+        total_parts = len(matching_parts)
+        total_pages = math.ceil(total_parts / PARTS_PER_PAGE)
+        page = max(1, min(page, total_pages))
+        
+        start_index = (page - 1) * PARTS_PER_PAGE
+        parts_to_display = matching_parts[start_index : start_index + PARTS_PER_PAGE]
+        
+        # Add images to parts
+        parts_with_images = []
+        for part in parts_to_display:
+            part_dict = part.to_dict()
+            part_dict['ImageURL'] = get_part_image_url(part.Category, part.PartNo, part.PartDescription)
+            part_dict['CleanedDescription'] = part.cleaned_description
+            parts_with_images.append(part_dict)
+        
+        return render_template('search_results.html',
+                             parts=parts_with_images,
+                             query=query,
+                             page=page,
+                             total_pages=total_pages,
+                             total_results=total_parts)
+    
+    except Exception as e:
+        logging.error(f"Error in search: {e}")
+        flash('Error occurred during search. Please try again.', 'error')
+        return render_template('search_results.html', parts=[], query=query, page=1, total_pages=0)
 
 # --- Part Details Route ---
 @app.route('/view_part/<part_no>')
@@ -372,7 +475,7 @@ def view_part(part_no):
         flash('Part not found.', 'error')
         return redirect(url_for('dashboard'))
     
-    part['ImageURL'] = get_part_image_url(part['Category'], part['PartNo'])
+    part['ImageURL'] = get_part_image_url(part['Category'], part['PartNo'], part['PartDescription'])
     # Add cleaned description for better presentation
     part['CleanedDescription'] = rag_system.clean_part_name(part['PartDescription'])
     return render_template('part_detail.html', part=part)
@@ -590,6 +693,31 @@ def api_chat():
         logging.error(f"Error in chat API: {e}")
         return jsonify({'reply': 'Sorry, an error occurred.'}), 500
 
+# --- Cart Count API ---
+@app.route('/api/cart/count')
+def api_cart_count():
+    """Get cart item count for current user."""
+    if 'user_role' not in session:
+        return jsonify({'count': 0})
+    
+    try:
+        username = 'customer' if session.get('user_role') == 'customer' else 'employee'
+        user_id = get_user_id(username)
+        
+        if not user_id:
+            return jsonify({'count': 0})
+        
+        conn = get_db_connection()
+        count = conn.execute('SELECT SUM(quantity) as total FROM cart WHERE user_id = ?', (user_id,)).fetchone()
+        conn.close()
+        
+        total_count = count['total'] if count['total'] else 0
+        return jsonify({'count': total_count})
+        
+    except Exception as e:
+        logging.error(f"Error getting cart count: {e}")
+        return jsonify({'count': 0})
+
 # --- Application Startup ---
 def initialize_app(app_instance):
     with app_instance.app_context():
@@ -639,7 +767,7 @@ def debug_images():
     
     for part in parts:
         part_dict = dict(part)
-        url = get_part_image_url(part_dict['Category'], part_dict['PartNo'])
+        url = get_part_image_url(part_dict['Category'], part_dict['PartNo'], part_dict['PartDescription'])
         debug_html += f"""
         <div style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
             <strong>Part:</strong> {part_dict['PartDescription']}<br>

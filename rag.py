@@ -69,15 +69,17 @@ class PartsRAG:
         if not part_description:
             return "Automotive Part"
 
-        # Convert to title case and clean up
+        # Start with the original string
         cleaned = part_description.strip()
 
-        # Remove excessive punctuation and normalize spacing
-        cleaned = re.sub(r'[_\-]{2,}', ' ', cleaned)  # Replace multiple underscores/dashes with space
-        cleaned = re.sub(r'[^\w\s\-/().]', ' ', cleaned)  # Remove special chars except common ones
+        # Step 1: Replace underscores and dashes with spaces
+        cleaned = re.sub(r'[_\-]+', ' ', cleaned)  # Replace underscores/dashes with space
+        
+        # Step 2: Remove excessive punctuation and normalize spacing
+        cleaned = re.sub(r'[^\w\s/().]', ' ', cleaned)  # Remove special chars except common ones
         cleaned = re.sub(r'\s+', ' ', cleaned)  # Normalize multiple spaces
 
-        # Handle common abbreviations and expand them
+        # Step 3: Handle common abbreviations and expand them (BEFORE title case)
         abbreviations = {
             r'\bALT\b': 'Alternator',
             r'\bSTR\b': 'Starter',
@@ -89,7 +91,7 @@ class PartsRAG:
             r'\bPMP\b': 'Pump',
             r'\bSHK\b': 'Shock',
             r'\bSTRUT\b': 'Strut',
-            r'\bCV\b': 'CV Joint',
+            r'\bCV\b': 'CV',
             r'\bA/C\b': 'Air Conditioning',
             r'\bAC\b': 'Air Conditioning',
             r'\bPS\b': 'Power Steering',
@@ -138,14 +140,17 @@ class PartsRAG:
             r'\bCRDL\b': 'Cradle',
             r'\bRAIL\b': 'Rail',
             r'\bBEAM\b': 'Beam',
-            r'\bSTRUCT\b': 'Structure'
+            r'\bSTRUCT\b': 'Structure',
+            r'\bFRT\b': 'Front',
+            r'\bFRNT\b': 'Front',
+            r'\bCOMP\b': 'Compressor'
         }
 
         # Apply abbreviation expansions (case insensitive)
         for abbrev, full_form in abbreviations.items():
             cleaned = re.sub(abbrev, full_form, cleaned, flags=re.IGNORECASE)
 
-        # Standardize common terms
+        # Step 4: Standardize common terms (BEFORE title case)
         standardizations = {
             r'\bPAD\b': 'Pad',
             r'\bSET\b': 'Set',
@@ -177,10 +182,10 @@ class PartsRAG:
         for pattern, replacement in standardizations.items():
             cleaned = re.sub(pattern, replacement, cleaned, flags=re.IGNORECASE)
 
-        # Convert to proper title case
+        # Step 5: Convert to proper title case
         cleaned = cleaned.title()
 
-        # Fix common title case issues
+        # Step 6: Fix common title case issues
         cleaned = re.sub(r'\bOf\b', 'of', cleaned)
         cleaned = re.sub(r'\bAnd\b', 'and', cleaned)
         cleaned = re.sub(r'\bThe\b', 'the', cleaned)
@@ -191,11 +196,11 @@ class PartsRAG:
         cleaned = re.sub(r'\bOn\b', 'on', cleaned)
         cleaned = re.sub(r'\bAt\b', 'at', cleaned)
 
-        # Ensure first letter is always capitalized
+        # Step 7: Ensure first letter is always capitalized
         if cleaned:
             cleaned = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper()
 
-        # Final cleanup
+        # Step 8: Final cleanup
         cleaned = cleaned.strip()
 
         return cleaned if cleaned else "Automotive Part"
@@ -242,7 +247,6 @@ class PartsRAG:
                     CustomerID="",
                     TotalPrice=0.0
                 )
-                part.cleaned_description = self.clean_part_name(part.PartDescription)
                 self.excel_parts_data.append(part)
 
             logger.info(f"Loaded {len(self.excel_parts_data)} parts from Excel file")

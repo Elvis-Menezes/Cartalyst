@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def test_llm_query_refinement():
-    print("🤖 Testing LLM-Powered Query Refinement System")
+    print("Testing LLM-Powered Query Refinement System")
     print("=" * 60)
     
     # Initialize RAG system
@@ -19,7 +19,7 @@ def test_llm_query_refinement():
     
     # Load data from database
     if not rag_system.load_data_from_db('parts.db'):
-        print("❌ Failed to load database")
+        print("ERROR: Failed to load database")
         return
     
     # Test queries with various complexity levels
@@ -36,7 +36,7 @@ def test_llm_query_refinement():
         "check engine light on"
     ]
     
-    print("🔍 Testing Query Refinement Process:")
+    print("Testing Query Refinement Process:")
     print("-" * 40)
     
     for i, query in enumerate(test_queries, 1):
@@ -57,12 +57,12 @@ def test_llm_query_refinement():
             if results_with_llm:
                 print("   Top result with LLM:")
                 top_result = results_with_llm[0]
-                print(f"     • {top_result.PartDescription} ({top_result.PartNo})")
+                print(f"     - {top_result.PartDescription} ({top_result.PartNo})")
         else:
-            print("   ⚠️  LLM not available (GROQ_API_KEY not set)")
+            print("   WARNING: LLM not available (GROQ_API_KEY not set)")
     
     print("\n" + "=" * 60)
-    print("🧪 Testing Complete Search Workflow:")
+    print("Testing Complete Search Workflow:")
     print("-" * 40)
     
     # Test the complete search workflow
@@ -73,24 +73,24 @@ def test_llm_query_refinement():
     ]
     
     for query in test_search_queries:
-        print(f"\n🔍 Searching for: '{query}'")
+        print(f"\nSearching for: '{query}'")
         results = rag_system.search_with_fallback(query, top_k=5)
         
         if results:
-            print(f"   ✅ Found {len(results)} relevant parts:")
+            print(f"   Found {len(results)} relevant parts:")
             for j, part in enumerate(results[:3], 1):
-                print(f"   {j}. {part.PartDescription} - ₹{part.Rate:.2f} ({part.PartNo})")
+                print(f"   {j}. {part.PartDescription} - Rs.{part.Rate:.2f} ({part.PartNo})")
         else:
-            print("   ❌ No parts found")
+            print("   No parts found")
 
 def test_chatbot_response():
     print("\n" + "=" * 60)
-    print("💬 Testing Chatbot Response with LLM Refinement:")
+    print("Testing Chatbot Response with LLM Refinement:")
     print("-" * 40)
     
     rag_system = PartsRAG()
     if not rag_system.load_data_from_db('parts.db'):
-        print("❌ Failed to load database")
+        print("ERROR: Failed to load database")
         return
     
     test_chat_queries = [
@@ -100,12 +100,12 @@ def test_chatbot_response():
     ]
     
     for query in test_chat_queries:
-        print(f"\n👤 User: {query}")
+        print(f"\nUser: {query}")
         if rag_system.groq_client:
             response = rag_system.generate_llm_response(query)
-            print(f"🤖 Caren: {response}")
+            print(f"Caren: {response}")
         else:
-            print("🤖 Caren: ⚠️ LLM not available (GROQ_API_KEY not set)")
+            print("Caren: WARNING - LLM not available (GROQ_API_KEY not set)")
 
 if __name__ == "__main__":
     test_llm_query_refinement()
