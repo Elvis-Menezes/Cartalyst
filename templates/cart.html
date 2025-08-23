@@ -84,7 +84,7 @@
                                     <h3 class="text-sm font-medium text-gray-900 truncate">{{ item.PartDescription }}</h3>
                                     <p class="text-sm text-gray-500">Part No: {{ item.part_no }}</p>
                                     <p class="text-sm text-gray-500">{{ item.VehicleMake }}</p>
-                                    <p class="text-sm font-medium text-blue-600">₹{{ "%.2f"|format(item.Rate) }}</p>
+                                    <p class="text-sm font-medium text-blue-600">OMR{{ "%.2f"|format(item.Rate) }}</p>
                                 </div>
                                 
                                 <!-- Quantity Controls -->
@@ -106,7 +106,7 @@
                                 
                                 <!-- Item Total -->
                                 <div class="text-right">
-                                    <p class="text-sm font-medium text-gray-900">₹{{ "%.2f"|format(item.Rate * item.quantity) }}</p>
+                                    <p class="text-sm font-medium text-gray-900">OMR{{ "%.2f"|format(item.Rate * item.quantity) }}</p>
                                 </div>
                                 
                                 <!-- Remove Button -->
@@ -132,16 +132,16 @@
                         <div class="space-y-3 mb-6">
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Subtotal</span>
-                                <span class="font-medium">₹{{ "%.2f"|format(total_amount) }}</span>
+                                <span class="font-medium">OMR{{ "%.2f"|format(total_amount) }}</span>
                             </div>
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Tax (18% GST)</span>
-                                <span class="font-medium">₹{{ "%.2f"|format(total_amount * 0.18) }}</span>
+                                <span class="font-medium">OMR{{ "%.2f"|format(total_amount * 0.18) }}</span>
                             </div>
                             <div class="border-t border-gray-200 pt-3">
                                 <div class="flex justify-between">
                                     <span class="text-base font-medium text-gray-900">Total</span>
-                                    <span class="text-base font-medium text-gray-900">₹{{ "%.2f"|format(total_amount * 1.18) }}</span>
+                                    <span class="text-base font-medium text-gray-900">OMR{{ "%.2f"|format(total_amount * 1.18) }}</span>
                                 </div>
                             </div>
                         </div>
